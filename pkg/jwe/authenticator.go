@@ -18,7 +18,6 @@ type Authenticator interface {
 }
 
 type authenticator struct {
-	env        *Env
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 	repository UserRepository
@@ -57,7 +56,7 @@ func (a *authenticator) GenerateToken(username string, password string) (string,
 	cl := jwt.Claims{
 		Subject: username,
 		Issuer:  "authenticator",
-		Expiry:  jwt.NewNumericDate(time.Now().Add(time.Duration(a.env.AuthTimeout) * time.Minute)),
+		Expiry:  jwt.NewNumericDate(time.Now().Add(24 * 7 * time.Hour)),
 	}
 
 	user.ClearPassword()
@@ -127,7 +126,7 @@ func (a *authenticator) VerifyTokenWithUser(jwe string, u User) error {
 	return nil
 }
 
-func NewAuthenticator(env *Env, repository UserRepository) (*authenticator, error) {
+func NewAuthenticator(repository UserRepository) (*authenticator, error) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
 		return nil, err
@@ -135,5 +134,5 @@ func NewAuthenticator(env *Env, repository UserRepository) (*authenticator, erro
 
 	publicKey := &privateKey.PublicKey
 
-	return &authenticator{env: env, privateKey: privateKey, publicKey: publicKey, repository: repository}, nil
+	return &authenticator{privateKey: privateKey, publicKey: publicKey, repository: repository}, nil
 }
