@@ -1,7 +1,5 @@
 package jwe
 
-import "time"
-
 type Env struct {
-	AuthTimeout time.Duration `env:"JWE_AUTH_TIMEOUT" envDefault:"60s"`
+	AuthTimeout uint16 `env:"JWE_AUTH_TIMEOUT" envDefault:"60"`
 }
