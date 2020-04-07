@@ -8,39 +8,33 @@ import (
 	"syscall"
 	"time"
 
-	"assistans-courses/apiserver/internal/providers"
-
+	"github.com/husobee/vestigo"
 	"github.com/justinas/alice"
-	"github.com/sirupsen/logrus"
 )
 
-type HttpServer interface {
+type Server interface {
 	Shutdown()
 	Run(handler http.Handler, middleware ...alice.Constructor) error
-	HttpResponder() HttpResponser
+	RunStaticServer(dir string) error
 }
 
-type httpServer struct {
-	halt      chan os.Signal
-	logger    *logrus.Entry
-	http      *http.Server
-	responser *httpResponder
+type server struct {
+	halt chan os.Signal
+	http *http.Server
 }
 
-func (s *httpServer) shutdownSignal() {
+func (s *server) shutdownSignal() {
 	signal.Notify(s.halt, os.Interrupt, os.Kill, syscall.SIGTERM)
-	code := <-s.halt
-	s.logger.Infof("interrupt signal detect %s", code)
 	s.Shutdown()
 }
 
-func (s *httpServer) Shutdown() {
+func (s *server) Shutdown() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	s.http.Shutdown(ctx)
 }
 
-func (s *httpServer) Run(handler http.Handler, middleware ...alice.Constructor) error {
+func (s *server) Run(handler http.Handler, middleware ...alice.Constructor) error {
 	go s.shutdownSignal()
 
 	s.http.Handler = alice.New(middleware...).Then(handler)
@@ -54,14 +48,16 @@ func (s *httpServer) Run(handler http.Handler, middleware ...alice.Constructor) 
 	return nil
 }
 
-func (s httpServer) HttpResponder() HttpResponser {
-	return s.responser
+func (s *server) RunStaticServer(dir string) error {
+	router := vestigo.NewRouter()
+	ui := NotFoundWrapper(http.FileServer(http.Dir(dir)))
+	router.Handle("/*", ui)
+	return s.Run(router)
 }
 
-func NewHttpServer(httpProvider providers.HTTPProvider, loggerProvider providers.LoggerProvider) *httpServer {
-	return &httpServer{
-		http:   httpProvider.HTTPServer(),
-		logger: loggerProvider.Logger(),
-		halt:   make(chan os.Signal, 1),
+func NewServer(httpProvider Provider) *server {
+	return &server{
+		http: httpProvider.Server(),
+		halt: make(chan os.Signal, 1),
 	}
 }

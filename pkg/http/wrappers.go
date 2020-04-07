@@ -4,19 +4,19 @@ import (
 	"net/http"
 )
 
-type notFoundRedirectWrapper struct {
+type NotFoundRedirectWrapper struct {
 	http.ResponseWriter
 	status int
 }
 
-func (w *notFoundRedirectWrapper) WriteHeader(status int) {
+func (w *NotFoundRedirectWrapper) WriteHeader(status int) {
 	w.status = status
 	if status != http.StatusNotFound {
 		w.ResponseWriter.WriteHeader(status)
 	}
 }
 
-func (w *notFoundRedirectWrapper) Write(p []byte) (int, error) {
+func (w *NotFoundRedirectWrapper) Write(p []byte) (int, error) {
 	if w.status != http.StatusNotFound {
 		return w.ResponseWriter.Write(p)
 	}
@@ -24,12 +24,12 @@ func (w *notFoundRedirectWrapper) Write(p []byte) (int, error) {
 	return len(p), nil
 }
 
-func notFoundWrapper(h http.Handler) http.HandlerFunc {
+func NotFoundWrapper(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		nfrw := &notFoundRedirectWrapper{ResponseWriter: w}
-		h.ServeHTTP(nfrw, r)
+		wrapper := &NotFoundRedirectWrapper{ResponseWriter: w}
+		h.ServeHTTP(wrapper, r)
 
-		if nfrw.status == 404 {
+		if wrapper.status == 404 {
 			http.Redirect(w, r, "/", http.StatusFound)
 		}
 	}

@@ -6,44 +6,37 @@ import (
 	"time"
 )
 
-type HTTPEnv struct {
-	HTTPAddr               string `env:"HTTP_ADDR" envDefault:"localhost"`
-	HTTPPort               int    `env:"HTTP_PORT" envDefault:"9000"`
-	HTTPReadHeadersTimeout int    `env:"HTTP_READ_HEADERS_TIMEOUT" envDefault:"10"`
-	HTTPReadRequestTimeout int    `env:"HTTP_READ_TIMEOUT" envDefault:"20"`
+type Provider interface {
+	Address() string
+	Port() int
+	AddressPort() string
+	Server() *http.Server
 }
 
-type HTTPProvider interface {
-	HTTPAddress() string
-	HTTPPort() int
-	HTTPAddressPort() string
-	HTTPServer() *http.Server
+type provider struct {
+	env *Env
 }
 
-type httpProvider struct {
-	env *HTTPEnv
+func (p provider) Address() string {
+	return p.env.Addr
 }
 
-func (p *httpProvider) HTTPAddress() string {
-	return p.env.HTTPAddr
+func (p provider) Port() int {
+	return p.env.Port
 }
 
-func (p *httpProvider) HTTPPort() int {
-	return p.env.HTTPPort
+func (p provider) AddressPort() string {
+	return fmt.Sprintf("%s:%d", p.env.Addr, p.env.Port)
 }
 
-func (p *httpProvider) HTTPAddressPort() string {
-	return fmt.Sprintf("%s:%d", p.env.HTTPAddr, p.env.HTTPPort)
-}
-
-func (p *httpProvider) HTTPServer() *http.Server {
+func (p provider) Server() *http.Server {
 	return &http.Server{
-		Addr:              p.HTTPAddressPort(),
-		ReadHeaderTimeout: time.Duration(p.env.HTTPReadHeadersTimeout) * time.Second,
-		ReadTimeout:       time.Duration(p.env.HTTPReadRequestTimeout) * time.Second,
+		Addr:              p.AddressPort(),
+		ReadHeaderTimeout: time.Duration(p.env.ReadHeadersTimeout) * time.Second,
+		ReadTimeout:       time.Duration(p.env.ReadRequestTimeout) * time.Second,
 	}
 }
 
-func NewHttpProvider(env *HTTPEnv) *httpProvider {
-	return &httpProvider{env: env}
+func NewProvider(env *Env) *provider {
+	return &provider{env: env}
 }

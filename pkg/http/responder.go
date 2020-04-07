@@ -5,39 +5,41 @@ import (
 	"net/http"
 )
 
-type HttpResponser interface {
-	String(w http.ResponseWriter, code int, data string) error
-	NoContent(w http.ResponseWriter, code int) error
-	JSON(w http.ResponseWriter, code int, data interface{}) error
-	JSONBlob(w http.ResponseWriter, code int, data []byte) error
+type Responder interface {
+	String(code int, data string) error
+	NoContent(code int) error
+	JSON(code int, data interface{}) error
+	JSONBlob(code int, data []byte) error
 }
 
-type httpResponder struct{}
+type responder struct {
+	writer http.ResponseWriter
+}
 
-func (r *httpResponder) String(w http.ResponseWriter, code int, data string) error {
-	w.WriteHeader(code)
-	_, err := w.Write([]byte(data))
+func (r *responder) String(code int, data string) error {
+	r.writer.WriteHeader(code)
+	_, err := r.writer.Write([]byte(data))
 	return err
 }
 
-func (r *httpResponder) NoContent(w http.ResponseWriter, code int) error {
-	w.WriteHeader(code)
+func (r *responder) NoContent(code int) error {
+	r.writer.WriteHeader(code)
 	return nil
 }
 
-func (r *httpResponder) JSON(w http.ResponseWriter, code int, data interface{}) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	return json.NewEncoder(w).Encode(data)
+func (r *responder) JSON(code int, data interface{}) error {
+	r.writer.Header().Set("Content-Type", "application/json")
+	r.writer.WriteHeader(code)
+	return json.NewEncoder(r.writer).Encode(data)
 }
 
-func (r *httpResponder) JSONBlob(w http.ResponseWriter, code int, data []byte) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	_, err := w.Write(data)
+func (r *responder) JSONBlob(code int, data []byte) error {
+	r.writer.Header().Set("Content-Type", "application/json")
+	r.writer.WriteHeader(code)
+	_, err := r.writer.Write(data)
 	return err
 }
 
-func NewHttpResponder() *httpResponder {
-	return &httpResponder{}
+func NewResponder(w http.ResponseWriter) *responder {
+	return &responder{writer: w}
 }

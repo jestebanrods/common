@@ -3,9 +3,8 @@ package http
 import "github.com/google/wire"
 
 var Set = wire.NewSet(
-	NewHttpResponder,
-	NewHttpServer,
-
-	wire.Bind(new(HttpResponser), new(*httpResponder)),
-	wire.Bind(new(HttpServer), new(*httpServer)),
+	NewResponder,
+	NewServer,
+	wire.Bind(new(Responder), new(*responder)),
+	wire.Bind(new(Server), new(*server)),
 )
