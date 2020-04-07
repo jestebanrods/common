@@ -14,6 +14,7 @@ type Authenticator interface {
 	GenerateToken(username string, password string) (string, error)
 	VerifyToken(jwe string) error
 	VerifyTokenWithUser(jwe string, u User) error
+	User() User
 }
 
 type authenticator struct {
@@ -21,6 +22,11 @@ type authenticator struct {
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 	repository UserRepository
+	user       User
+}
+
+func (a *authenticator) User() User {
+	return a.user
 }
 
 func (a *authenticator) GenerateToken(username string, password string) (string, error) {
@@ -60,6 +66,8 @@ func (a *authenticator) GenerateToken(username string, password string) (string,
 	if err != nil {
 		return "", err
 	}
+
+	a.user = user
 
 	return jwe, nil
 }
