@@ -5,6 +5,6 @@ import (
 )
 
 var Set = wire.NewSet(
-	NewLoggerProvider,
-	wire.Bind(new(LoggerProvider), new(*loggerProvider)),
+	NewProvider,
+	wire.Bind(new(Provider), new(*provider)),
 )

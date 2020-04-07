@@ -2,38 +2,33 @@ package logger
 
 import "github.com/sirupsen/logrus"
 
-type LoggerEnv struct {
-	LogLevel     string `env:"LOG_LEVEL" envDefault:""`
-	LogFormatter string `env:"LOG_FORMATTER" envDefault:"json"`
-}
-
-type LoggerProvider interface {
+type Provider interface {
 	Logger() *logrus.Entry
 }
 
-type loggerProvider struct {
+type provider struct {
 	logger *logrus.Logger
 }
 
-func (c *loggerProvider) Logger() *logrus.Entry {
+func (c *provider) Logger() *logrus.Entry {
 	return logrus.NewEntry(c.logger)
 }
 
-func NewLoggerProvider(env *LoggerEnv) *loggerProvider {
+func NewProvider(env *Env) *provider {
 	logger := logrus.New()
 
-	if env.LogFormatter == "json" {
+	if env.Formatter == "json" {
 		logger.Formatter = &logrus.JSONFormatter{}
 	}
 
-	level, err := logrus.ParseLevel(env.LogLevel)
+	level, err := logrus.ParseLevel(env.Level)
 	if err == nil {
 		logger.Level = level
 	} else {
 		logger.Level = logrus.DebugLevel
 	}
 
-	return &loggerProvider{
+	return &provider{
 		logger: logger,
 	}
 }
