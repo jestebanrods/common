@@ -25,6 +25,7 @@ type server struct {
 
 func (s *server) shutdownSignal() {
 	signal.Notify(s.halt, os.Interrupt, os.Kill, syscall.SIGTERM)
+	<-s.halt
 	s.Shutdown()
 }
 
