@@ -57,7 +57,7 @@ func (a *authenticator) GenerateToken(username string, password string) (string,
 	cl := jwt.Claims{
 		Subject: username,
 		Issuer:  "authenticator",
-		Expiry:  jwt.NewNumericDate(time.Now().Add(a.env.AuthTimeout)),
+		Expiry:  jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
 	}
 
 	user.ClearPassword()
