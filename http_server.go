@@ -22,12 +22,12 @@ type HTTPEnv struct {
 	ReadRequestTimeout int    `env:"HTTP_READ_REQUEST_TIMEOUT" envDefault:"20"`
 }
 
-type server struct {
+type Server struct {
 	halt chan os.Signal
 	http *http.Server
 }
 
-func (s *server) Run(handler http.Handler, middleware ...alice.Constructor) error {
+func (s *Server) Run(handler http.Handler, middleware ...alice.Constructor) error {
 	go s.shutdownSignal()
 
 	s.http.Handler = alice.New(middleware...).Then(handler)
@@ -41,25 +41,25 @@ func (s *server) Run(handler http.Handler, middleware ...alice.Constructor) erro
 	return nil
 }
 
-func (s *server) Shutdown() {
+func (s *Server) Shutdown() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	s.http.Shutdown(ctx)
 }
 
-func (s *server) RunStaticServer(dir string) error {
+func (s *Server) RunStaticServer(dir string) error {
 	router := vestigo.NewRouter()
 	router.Handle("/*", s.frontendHandler(dir))
 	return s.Run(router)
 }
 
-func (s *server) shutdownSignal() {
+func (s *Server) shutdownSignal() {
 	signal.Notify(s.halt, os.Interrupt, os.Kill, syscall.SIGTERM)
 	<-s.halt
 	s.Shutdown()
 }
 
-func (s *server) frontendHandler(publicDir string) http.HandlerFunc {
+func (s *Server) frontendHandler(publicDir string) http.HandlerFunc {
 	handler := http.FileServer(http.Dir(publicDir))
 
 	return func(w http.ResponseWriter, req *http.Request) {
@@ -73,8 +73,8 @@ func (s *server) frontendHandler(publicDir string) http.HandlerFunc {
 	}
 }
 
-func NewServer(env *HTTPEnv) *server {
-	return &server{
+func NewServer(env *HTTPEnv) *Server {
+	return &Server{
 		halt: make(chan os.Signal, 1),
 		http: &http.Server{
 			Addr:              fmt.Sprintf("%s:%d", env.Addr, env.Port),
