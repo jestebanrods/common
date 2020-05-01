@@ -49,7 +49,7 @@ func (s *Server) Shutdown() {
 
 func (s *Server) RunStaticServer(dir string) error {
 	router := vestigo.NewRouter()
-	router.Handle("/*", s.frontendHandler(dir))
+	router.Handle("/*", FrontendHandler(dir))
 	return s.Run(router)
 }
 
@@ -59,7 +59,7 @@ func (s *Server) shutdownSignal() {
 	s.Shutdown()
 }
 
-func (s *Server) frontendHandler(publicDir string) http.HandlerFunc {
+func FrontendHandler(publicDir string) http.HandlerFunc {
 	handler := http.FileServer(http.Dir(publicDir))
 
 	return func(w http.ResponseWriter, req *http.Request) {
