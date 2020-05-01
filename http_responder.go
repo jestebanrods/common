@@ -1,16 +1,9 @@
-package http
+package common
 
 import (
 	"encoding/json"
 	"net/http"
 )
-
-type Responder interface {
-	String(code int, data string) error
-	NoContent(code int) error
-	JSON(code int, data interface{}) error
-	JSONBlob(code int, data []byte) error
-}
 
 type responder struct {
 	writer http.ResponseWriter
