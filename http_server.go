@@ -31,7 +31,6 @@ func (s *Server) Run(handler http.Handler, middleware ...alice.Constructor) erro
 	go s.shutdownSignal()
 
 	s.http.Handler = alice.New(middleware...).Then(handler)
-	s.http.Handler = handler
 
 	err := s.http.ListenAndServe()
 	if err != http.ErrServerClosed {
